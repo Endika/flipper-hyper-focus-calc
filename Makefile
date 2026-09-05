@@ -7,7 +7,7 @@ FLIPPER_FIRMWARE_PATH ?= /home/<YOUR_PATH>/flipperzero-firmware
 PWD = $(shell pwd)
 
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c11 -I.
+CFLAGS = -Wall -Wextra -Werror -std=c11 -I.
 LDFLAGS = -lm
 
 .PHONY: all help test prepare fap clean clean_firmware format linter
@@ -33,7 +33,7 @@ format:
 	clang-format -i $(FORMAT_FILES)
 
 linter:
-	cppcheck --enable=all --inline-suppr -I. \
+	cppcheck --enable=all --inline-suppr --error-exitcode=1 -I. \
 		--suppress=missingIncludeSystem \
 		--suppress=unusedFunction:src/domain/hyperfocal.c \
 		--suppress=unusedFunction:src/domain/sensor_data.c \
