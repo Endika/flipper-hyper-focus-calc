@@ -21,3 +21,13 @@ jobs:
         run: git ls-files '*.c' '*.h' | xargs clang-format --dry-run --Werror
       - name: Run tests
         run: make test
+      # The .fap is the only gate that compiles main.c, src/app/hyperfocus_app.c,
+      # src/ui/calc_scene.c and src/persistence/sensors_store.c: they need the firmware's
+      # furi headers, so gcc never sees them and cppcheck was their only reader. Last in
+      # the job, so the fast gates above still fail first.
+      - name: Build FAP
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1.4
+        with:
+          # Stable released firmware API, matching the release build — a dev-channel build
+          # targets a newer API than stable firmware provides.
+          sdk-channel: release

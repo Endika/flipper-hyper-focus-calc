@@ -31,9 +31,11 @@ jobs:
       - name: Build FAP
         id: ufbt
         if: ${{ steps.release.outputs.release_created }}
-        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1.4
         with:
-          sdk-channel: dev
+          # Build against the stable released firmware API, not dev — a dev-channel build targets
+          # a newer API than stable firmware provides and fails to load with "API version mismatch".
+          sdk-channel: release
 
       - name: Upload FAP to release
         if: ${{ steps.release.outputs.release_created }}
