@@ -16,7 +16,7 @@ all: test
 
 help:
 	@echo "Targets for $(PROJECT_NAME):"
-	@echo "  make test           - Unit tests (hyperfocal + sensor CoC on host)"
+	@echo "  make test           - Unit tests (hyperfocal + sensor CoC + sensors recovery on host)"
 	@echo "  make prepare        - Symlink app into firmware applications_user"
 	@echo "  make fap            - Clean firmware build + compile .fap"
 	@echo "  make format         - clang-format"
@@ -33,17 +33,23 @@ format:
 	clang-format -i $(FORMAT_FILES)
 
 linter:
-	cppcheck --enable=all --inline-suppr --error-exitcode=1 -I. \
+	cppcheck --enable=all --check-level=exhaustive --inline-suppr --error-exitcode=1 -I. \
 		--suppress=missingIncludeSystem \
 		--suppress=unusedFunction:src/domain/hyperfocal.c \
 		--suppress=unusedFunction:src/domain/sensor_data.c \
-		src/domain/hyperfocal.c src/domain/sensor_data.c tests/test_hyperfocal.c
+		--suppress=redundantAssignment:tests/test_sensors_recovery.c \
+		src/domain/hyperfocal.c src/domain/sensor_data.c \
+		src/domain/sensors_codec.c src/domain/sensors_recovery.c \
+		tests/test_hyperfocal.c tests/test_sensors_recovery.c
 
 OBJS = sensor_data.o hyperfocal.o test_hyperfocal.o
+RECOVERY_OBJS = sensor_data.o sensors_codec.o sensors_recovery.o test_sensors_recovery.o
 
-test: $(OBJS)
+test: $(OBJS) $(RECOVERY_OBJS)
 	$(CC) $(CFLAGS) -o test_hyperfocal $(OBJS) $(LDFLAGS)
 	./test_hyperfocal
+	$(CC) $(CFLAGS) -o test_sensors_recovery $(RECOVERY_OBJS) $(LDFLAGS)
+	./test_sensors_recovery
 
 sensor_data.o: src/domain/sensor_data.c include/domain/sensor_data.h
 	$(CC) $(CFLAGS) -c src/domain/sensor_data.c -o sensor_data.o
@@ -53,6 +59,16 @@ hyperfocal.o: src/domain/hyperfocal.c include/domain/hyperfocal.h include/domain
 
 test_hyperfocal.o: tests/test_hyperfocal.c include/domain/hyperfocal.h include/domain/sensor_data.h
 	$(CC) $(CFLAGS) -c tests/test_hyperfocal.c -o test_hyperfocal.o
+
+sensors_codec.o: src/domain/sensors_codec.c include/domain/sensors_codec.h include/domain/sensor_data.h
+	$(CC) $(CFLAGS) -c src/domain/sensors_codec.c -o sensors_codec.o
+
+sensors_recovery.o: src/domain/sensors_recovery.c include/domain/sensors_recovery.h \
+		include/domain/sensors_codec.h include/domain/storage_port.h
+	$(CC) $(CFLAGS) -c src/domain/sensors_recovery.c -o sensors_recovery.o
+
+test_sensors_recovery.o: tests/test_sensors_recovery.c include/domain/sensors_recovery.h
+	$(CC) $(CFLAGS) -c tests/test_sensors_recovery.c -o test_sensors_recovery.o
 
 prepare:
 	@if [ -d "$(FLIPPER_FIRMWARE_PATH)" ]; then \
@@ -74,4 +90,4 @@ fap: prepare clean_firmware clean
 	fi
 
 clean:
-	rm -f *.o tests/*.o test_hyperfocal
+	rm -f *.o tests/*.o test_hyperfocal test_sensors_recovery

@@ -2,6 +2,7 @@
 *.o
 tests/*.o
 test_hyperfocal
+test_sensors_recovery
 
 # ufbt / GitHub Actions release build
 dist/
