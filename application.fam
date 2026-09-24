@@ -7,11 +7,16 @@ App(
         "src/app/hyperfocus_app.c",
         "src/domain/hyperfocal.c",
         "src/domain/sensor_data.c",
+        "src/domain/sensors_codec.c",
+        "src/domain/sensors_recovery.c",
         "src/persistence/sensors_store.c",
         "src/ui/calc_scene.c",
     ],
     entry_point="hyperfocus_calc_app",
-    stack_size=4 * 1024,
+    # Every save now re-checks the main file (and .tmp) before writing, stacking a decode
+    # buffer inside a decode buffer on top of the encode buffer; objdump on the debug ELF
+    # shows a ~4.6-5K peak on that call chain, so 4K no longer fits.
+    stack_size=8 * 1024,
     fap_version="0.1.2",  # x-release-please-version
     fap_icon="icons/icon.icon",
     fap_category="Tools",
