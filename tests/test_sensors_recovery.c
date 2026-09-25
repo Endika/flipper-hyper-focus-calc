@@ -161,8 +161,7 @@ static void set_corrupt(FakeFs *fs, const char *path, uint8_t filler) {
     fake_write_all(fs, path, garbage, sizeof(garbage));
 }
 
-// Bigger than SENSORS_FILE_MAX_BYTES can ever be for a valid record: the reviewer
-// reproduced the bug with a 1600-byte main.
+// 1600 bytes: bigger than SENSORS_FILE_MAX_BYTES can ever be for a valid record.
 static void set_oversized(FakeFs *fs, const char *path) {
     uint8_t garbage[1600];
     memset(garbage, 0xEE, sizeof(garbage));
@@ -535,12 +534,12 @@ static void test_oversized_tmp_with_missing_main_is_quarantined(void) {
     assert(bad && bad->len == tmp_before.len && memcmp(bad->data, tmp_before.data, bad->len) == 0);
 }
 
-// The exact sequence the second review reproduced, with no crash needed at test time: a
+// No crash needed at test time: a
 // rename fails right after removing main (leaving main gone, .tmp holding the real data),
 // then a later save's .tmp read is hit by the firmware's short-read quirk. That must block
 // the save before it ever writes — never truncate/replace .tmp — or the real data is gone
 // for good with main already missing.
-static void test_second_review_failing_sequence_is_blocked(void) {
+static void test_recovered_tmp_survives_next_short_read(void) {
     FakeFs fs = {0};
     StoragePort port = fake_port(&fs);
 
@@ -652,7 +651,7 @@ int main(void) {
     test_tmp_garbage_with_missing_main_quarantines_tmp();
     test_oversized_main_is_quarantined_not_blocked();
     test_oversized_tmp_with_missing_main_is_quarantined();
-    test_second_review_failing_sequence_is_blocked();
+    test_recovered_tmp_survives_next_short_read();
     test_save_guard_promotes_orphaned_tmp_before_overwriting();
     test_save_blocked_when_guard_cannot_promote();
     puts("test_sensors_recovery: ok");
