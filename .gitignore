@@ -4,6 +4,9 @@ tests/*.o
 test_hyperfocal
 test_sensors_recovery
 
+# Local firmware path override (see Makefile)
+local.mk
+
 # ufbt / GitHub Actions release build
 dist/
 .ufbt/
