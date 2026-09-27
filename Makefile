@@ -3,7 +3,11 @@ PROJECT_NAME = hyperfocus_calc
 
 FAP_APPID = flipper_hyper_focus_calc
 
-FLIPPER_FIRMWARE_PATH ?= /home/<YOUR_PATH>/flipperzero-firmware
+# Local override: create a gitignored `local.mk` with your real path, e.g.
+#   FLIPPER_FIRMWARE_PATH = /home/you/flipperzero-firmware
+# The committed default below is a placeholder on purpose — never commit a real path.
+-include local.mk
+FLIPPER_FIRMWARE_PATH ?= <Path>/flipperzero-firmware
 PWD = $(shell pwd)
 
 CC = gcc
